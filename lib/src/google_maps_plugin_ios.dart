@@ -1,43 +1,5 @@
-// Copyright 2013 The Flutter Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
+part of google_maps_plugin;
 
-import 'dart:async';
-
-import 'package:flutter/foundation.dart';
-import 'package:flutter/gestures.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:stream_transform/stream_transform.dart';
-
-import '../../lib_platform_interface/google_maps_flutter_platform_interface.dart';
-import 'google_map_inspector_ios.dart';
-
-// TODO(stuartmorgan): Remove the dependency on platform interface toJson
-// methods. Channel serialization details should all be package-internal.
-
-/// Error thrown when an unknown map ID is provided to a method channel API.
-class UnknownMapIDError extends Error {
-  /// Creates an assertion error with the provided [mapId] and optional
-  /// [message].
-  UnknownMapIDError(this.mapId, [this.message]);
-
-  /// The unknown ID.
-  final int mapId;
-
-  /// Message describing the assertion error.
-  final Object? message;
-
-  @override
-  String toString() {
-    if (message != null) {
-      return 'Unknown map ID $mapId: ${Error.safeToString(message)}';
-    }
-    return 'Unknown map ID $mapId';
-  }
-}
-
-/// An implementation of [GoogleMapsFlutterPlatform] for iOS.
 class GoogleMapsFlutterIOS extends GoogleMapsFlutterPlatform {
   /// Registers the iOS implementation of GoogleMapsFlutterPlatform.
   static void registerWith() {

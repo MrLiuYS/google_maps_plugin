@@ -4,7 +4,7 @@
 
 import 'package:flutter/widgets.dart';
 
-import '../../google_maps_flutter_platform_interface.dart';
+import '../../google_maps_plugin_platform_interface.dart';
 
 /// Configuration options for the GoogleMaps user interface.
 @immutable

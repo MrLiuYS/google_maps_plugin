@@ -9,14 +9,11 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
-// import 'package:google_maps_flutter_platform_interface/google_maps_flutter_platform_interface.dart';
 import 'package:stream_transform/stream_transform.dart';
 
-import '../../lib_platform_interface/google_maps_flutter_platform_interface.dart';
-import 'google_map_inspector_android.dart';
-
-// TODO(stuartmorgan): Remove the dependency on platform interface toJson
-// methods. Channel serialization details should all be package-internal.
+import '../../google_maps_plugin_platform_interface.dart';
+import '../types/tile_overlay_updates.dart';
+import '../types/utils/map_configuration_serialization.dart';
 
 /// Error thrown when an unknown map ID is provided to a method channel API.
 class UnknownMapIDError extends Error {
@@ -39,36 +36,23 @@ class UnknownMapIDError extends Error {
   }
 }
 
-/// The possible android map renderer types that can be
-/// requested from the native Google Maps SDK.
-enum AndroidMapRenderer {
-  /// Latest renderer type.
-  latest,
-
-  /// Legacy renderer type.
-  legacy,
-
-  /// Requests the default map renderer type.
-  platformDefault,
-}
-
-/// An implementation of [GoogleMapsFlutterPlatform] for Android.
-class GoogleMapsFlutterAndroid extends GoogleMapsFlutterPlatform {
-  /// Registers the Android implementation of GoogleMapsFlutterPlatform.
-  static void registerWith() {
-    GoogleMapsFlutterPlatform.instance = GoogleMapsFlutterAndroid();
-  }
-
-  /// The method channel used to initialize the native Google Maps SDK.
-  final MethodChannel _initializerChannel = const MethodChannel(
-      'plugins.flutter.dev/google_maps_android_initializer');
-
+/// An implementation of [GoogleMapsFlutterPlatform] that uses [MethodChannel] to communicate with the native code.
+///
+/// The `google_maps_plugin` plugin code itself never talks to the native code directly. It delegates
+/// all those calls to an instance of a class that extends the GoogleMapsFlutterPlatform.
+///
+/// The architecture above allows for platforms that communicate differently with the native side
+/// (like web) to have a common interface to extend.
+///
+/// This is the instance that runs when the native side talks to your Flutter app through MethodChannels,
+/// like the Android and iOS platforms.
+class MethodChannelGoogleMapsFlutter extends GoogleMapsFlutterPlatform {
   // Keep a collection of id -> channel
   // Every method call passes the int mapId
   final Map<int, MethodChannel> _channels = <int, MethodChannel>{};
 
   /// Accesses the MethodChannel associated to the passed mapId.
-  MethodChannel _channel(int mapId) {
+  MethodChannel channel(int mapId) {
     final MethodChannel? channel = _channels[mapId];
     if (channel == null) {
       throw UnknownMapIDError(mapId);
@@ -85,7 +69,7 @@ class GoogleMapsFlutterAndroid extends GoogleMapsFlutterPlatform {
   MethodChannel ensureChannelInitialized(int mapId) {
     MethodChannel? channel = _channels[mapId];
     if (channel == null) {
-      channel = MethodChannel('plugins.flutter.dev/google_maps_android_$mapId');
+      channel = MethodChannel('plugins.flutter.io/google_maps_$mapId');
       channel.setMethodCallHandler(
           (MethodCall call) => _handleMethodCall(call, mapId));
       _channels[mapId] = channel;
@@ -305,7 +289,7 @@ class GoogleMapsFlutterAndroid extends GoogleMapsFlutterPlatform {
     Map<String, dynamic> optionsUpdate, {
     required int mapId,
   }) {
-    return _channel(mapId).invokeMethod<void>(
+    return channel(mapId).invokeMethod<void>(
       'map#update',
       <String, dynamic>{
         'options': optionsUpdate,
@@ -318,7 +302,7 @@ class GoogleMapsFlutterAndroid extends GoogleMapsFlutterPlatform {
     MarkerUpdates markerUpdates, {
     required int mapId,
   }) {
-    return _channel(mapId).invokeMethod<void>(
+    return channel(mapId).invokeMethod<void>(
       'markers#update',
       markerUpdates.toJson(),
     );
@@ -329,7 +313,7 @@ class GoogleMapsFlutterAndroid extends GoogleMapsFlutterPlatform {
     PolygonUpdates polygonUpdates, {
     required int mapId,
   }) {
-    return _channel(mapId).invokeMethod<void>(
+    return channel(mapId).invokeMethod<void>(
       'polygons#update',
       polygonUpdates.toJson(),
     );
@@ -340,7 +324,7 @@ class GoogleMapsFlutterAndroid extends GoogleMapsFlutterPlatform {
     PolylineUpdates polylineUpdates, {
     required int mapId,
   }) {
-    return _channel(mapId).invokeMethod<void>(
+    return channel(mapId).invokeMethod<void>(
       'polylines#update',
       polylineUpdates.toJson(),
     );
@@ -351,7 +335,7 @@ class GoogleMapsFlutterAndroid extends GoogleMapsFlutterPlatform {
     CircleUpdates circleUpdates, {
     required int mapId,
   }) {
-    return _channel(mapId).invokeMethod<void>(
+    return channel(mapId).invokeMethod<void>(
       'circles#update',
       circleUpdates.toJson(),
     );
@@ -367,10 +351,10 @@ class GoogleMapsFlutterAndroid extends GoogleMapsFlutterPlatform {
     final Set<TileOverlay> previousSet = currentTileOverlays != null
         ? currentTileOverlays.values.toSet()
         : <TileOverlay>{};
-    final _TileOverlayUpdates updates =
-        _TileOverlayUpdates.from(previousSet, newTileOverlays);
+    final TileOverlayUpdates updates =
+        TileOverlayUpdates.from(previousSet, newTileOverlays);
     _tileOverlays[mapId] = keyTileOverlayId(newTileOverlays);
-    return _channel(mapId).invokeMethod<void>(
+    return channel(mapId).invokeMethod<void>(
       'tileOverlays#update',
       updates.toJson(),
     );
@@ -381,7 +365,7 @@ class GoogleMapsFlutterAndroid extends GoogleMapsFlutterPlatform {
     TileOverlayId tileOverlayId, {
     required int mapId,
   }) {
-    return _channel(mapId)
+    return channel(mapId)
         .invokeMethod<void>('tileOverlays#clearTileCache', <String, Object>{
       'tileOverlayId': tileOverlayId.value,
     });
@@ -392,8 +376,7 @@ class GoogleMapsFlutterAndroid extends GoogleMapsFlutterPlatform {
     CameraUpdate cameraUpdate, {
     required int mapId,
   }) {
-    return _channel(mapId)
-        .invokeMethod<void>('camera#animate', <String, Object>{
+    return channel(mapId).invokeMethod<void>('camera#animate', <String, Object>{
       'cameraUpdate': cameraUpdate.toJson(),
     });
   }
@@ -403,7 +386,7 @@ class GoogleMapsFlutterAndroid extends GoogleMapsFlutterPlatform {
     CameraUpdate cameraUpdate, {
     required int mapId,
   }) {
-    return _channel(mapId).invokeMethod<void>('camera#move', <String, dynamic>{
+    return channel(mapId).invokeMethod<void>('camera#move', <String, dynamic>{
       'cameraUpdate': cameraUpdate.toJson(),
     });
   }
@@ -413,7 +396,7 @@ class GoogleMapsFlutterAndroid extends GoogleMapsFlutterPlatform {
     String? mapStyle, {
     required int mapId,
   }) async {
-    final List<dynamic> successAndError = (await _channel(mapId)
+    final List<dynamic> successAndError = (await channel(mapId)
         .invokeMethod<List<dynamic>>('map#setStyle', mapStyle))!;
     final bool success = successAndError[0] as bool;
     if (!success) {
@@ -425,7 +408,7 @@ class GoogleMapsFlutterAndroid extends GoogleMapsFlutterPlatform {
   Future<LatLngBounds> getVisibleRegion({
     required int mapId,
   }) async {
-    final Map<String, dynamic> latLngBounds = (await _channel(mapId)
+    final Map<String, dynamic> latLngBounds = (await channel(mapId)
         .invokeMapMethod<String, dynamic>('map#getVisibleRegion'))!;
     final LatLng southwest = LatLng.fromJson(latLngBounds['southwest'])!;
     final LatLng northeast = LatLng.fromJson(latLngBounds['northeast'])!;
@@ -438,7 +421,7 @@ class GoogleMapsFlutterAndroid extends GoogleMapsFlutterPlatform {
     LatLng latLng, {
     required int mapId,
   }) async {
-    final Map<String, int> point = (await _channel(mapId)
+    final Map<String, int> point = (await channel(mapId)
         .invokeMapMethod<String, int>(
             'map#getScreenCoordinate', latLng.toJson()))!;
 
@@ -450,7 +433,7 @@ class GoogleMapsFlutterAndroid extends GoogleMapsFlutterPlatform {
     ScreenCoordinate screenCoordinate, {
     required int mapId,
   }) async {
-    final List<dynamic> latLng = (await _channel(mapId)
+    final List<dynamic> latLng = (await channel(mapId)
         .invokeMethod<List<dynamic>>(
             'map#getLatLng', screenCoordinate.toJson()))!;
     return LatLng(latLng[0] as double, latLng[1] as double);
@@ -461,7 +444,7 @@ class GoogleMapsFlutterAndroid extends GoogleMapsFlutterPlatform {
     MarkerId markerId, {
     required int mapId,
   }) {
-    return _channel(mapId).invokeMethod<void>(
+    return channel(mapId).invokeMethod<void>(
         'markers#showInfoWindow', <String, String>{'markerId': markerId.value});
   }
 
@@ -470,7 +453,7 @@ class GoogleMapsFlutterAndroid extends GoogleMapsFlutterPlatform {
     MarkerId markerId, {
     required int mapId,
   }) {
-    return _channel(mapId).invokeMethod<void>(
+    return channel(mapId).invokeMethod<void>(
         'markers#hideInfoWindow', <String, String>{'markerId': markerId.value});
   }
 
@@ -479,8 +462,7 @@ class GoogleMapsFlutterAndroid extends GoogleMapsFlutterPlatform {
     MarkerId markerId, {
     required int mapId,
   }) async {
-    return (await _channel(mapId).invokeMethod<bool>(
-        'markers#isInfoWindowShown',
+    return (await channel(mapId).invokeMethod<bool>('markers#isInfoWindowShown',
         <String, String>{'markerId': markerId.value}))!;
   }
 
@@ -488,70 +470,29 @@ class GoogleMapsFlutterAndroid extends GoogleMapsFlutterPlatform {
   Future<double> getZoomLevel({
     required int mapId,
   }) async {
-    return (await _channel(mapId).invokeMethod<double>('map#getZoomLevel'))!;
+    return (await channel(mapId).invokeMethod<double>('map#getZoomLevel'))!;
   }
 
   @override
   Future<Uint8List?> takeSnapshot({
     required int mapId,
   }) {
-    return _channel(mapId).invokeMethod<Uint8List>('map#takeSnapshot');
+    return channel(mapId).invokeMethod<Uint8List>('map#takeSnapshot');
   }
 
-  /// Set [GoogleMapsFlutterPlatform] to use [AndroidViewSurface] to build the
-  /// Google Maps widget.
+  /// Set [GoogleMapsFlutterPlatform] to use [AndroidViewSurface] to build the Google Maps widget.
   ///
-  /// See https://pub.dev/packages/google_maps_flutter_android#display-mode
-  /// for more information.
+  /// This implementation uses hybrid composition to render the Google Maps
+  /// Widget on Android. This comes at the cost of some performance on Android
+  /// versions below 10. See
+  /// https://flutter.dev/docs/development/platform-integration/platform-views#performance for more
+  /// information.
   ///
-  /// Currently defaults to false, but the default is subject to change.
+  /// If set to true, the google map widget should be built with
+  /// [buildViewWithTextDirection] instead of [buildView].
+  ///
+  /// Defaults to false.
   bool useAndroidViewSurface = false;
-
-  /// Requests Google Map Renderer with [AndroidMapRenderer] type.
-  ///
-  /// See https://pub.dev/packages/google_maps_flutter_android#map-renderer
-  /// for more information.
-  ///
-  /// The renderer must be requested before creating GoogleMap instances as the
-  /// renderer can be initialized only once per application context.
-  /// Throws a [PlatformException] if method is called multiple times.
-  ///
-  /// The returned [Future] completes after renderer has been initialized.
-  /// Initialized [AndroidMapRenderer] type is returned.
-  Future<AndroidMapRenderer> initializeWithRenderer(
-      AndroidMapRenderer? rendererType) async {
-    String preferredRenderer;
-    switch (rendererType) {
-      case AndroidMapRenderer.latest:
-        preferredRenderer = 'latest';
-        break;
-      case AndroidMapRenderer.legacy:
-        preferredRenderer = 'legacy';
-        break;
-      case AndroidMapRenderer.platformDefault:
-      case null:
-        preferredRenderer = 'default';
-    }
-
-    final String? initializedRenderer = await _initializerChannel
-        .invokeMethod<String>('initializer#preferRenderer',
-            <String, dynamic>{'value': preferredRenderer});
-
-    if (initializedRenderer == null) {
-      throw AndroidMapRendererException('Failed to initialize map renderer.');
-    }
-
-    // Returns mapped [AndroidMapRenderer] enum type.
-    switch (initializedRenderer) {
-      case 'latest':
-        return AndroidMapRenderer.latest;
-      case 'legacy':
-        return AndroidMapRenderer.legacy;
-      default:
-        throw AndroidMapRendererException(
-            'Failed to initialize latest or legacy renderer, got $initializedRenderer.');
-    }
-  }
 
   Widget _buildView(
     int creationId,
@@ -571,51 +512,62 @@ class GoogleMapsFlutterAndroid extends GoogleMapsFlutterPlatform {
       'tileOverlaysToAdd': serializeTileOverlaySet(mapObjects.tileOverlays),
     };
 
-    const String viewType = 'plugins.flutter.dev/google_maps_android';
-    if (useAndroidViewSurface) {
-      return PlatformViewLink(
-        viewType: viewType,
-        surfaceFactory: (
-          BuildContext context,
-          PlatformViewController controller,
-        ) {
-          return AndroidViewSurface(
-            controller: controller as AndroidViewController,
-            gestureRecognizers: widgetConfiguration.gestureRecognizers,
-            hitTestBehavior: PlatformViewHitTestBehavior.opaque,
-          );
-        },
-        onCreatePlatformView: (PlatformViewCreationParams params) {
-          final AndroidViewController controller =
-              PlatformViewsService.initExpensiveAndroidView(
-            id: params.id,
-            viewType: viewType,
-            layoutDirection: widgetConfiguration.textDirection,
-            creationParams: creationParams,
-            creationParamsCodec: const StandardMessageCodec(),
-            onFocus: () => params.onFocusChanged(true),
-          );
-          controller.addOnPlatformViewCreatedListener(
-            params.onPlatformViewCreated,
-          );
-          controller.addOnPlatformViewCreatedListener(
-            onPlatformViewCreated,
-          );
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      if (useAndroidViewSurface) {
+        return PlatformViewLink(
+          viewType: 'plugins.flutter.io/google_maps',
+          surfaceFactory: (
+            BuildContext context,
+            PlatformViewController controller,
+          ) {
+            return AndroidViewSurface(
+              controller: controller as AndroidViewController,
+              gestureRecognizers: widgetConfiguration.gestureRecognizers,
+              hitTestBehavior: PlatformViewHitTestBehavior.opaque,
+            );
+          },
+          onCreatePlatformView: (PlatformViewCreationParams params) {
+            final SurfaceAndroidViewController controller =
+                PlatformViewsService.initSurfaceAndroidView(
+              id: params.id,
+              viewType: 'plugins.flutter.io/google_maps',
+              layoutDirection: widgetConfiguration.textDirection,
+              creationParams: creationParams,
+              creationParamsCodec: const StandardMessageCodec(),
+              onFocus: () => params.onFocusChanged(true),
+            );
+            controller.addOnPlatformViewCreatedListener(
+              params.onPlatformViewCreated,
+            );
+            controller.addOnPlatformViewCreatedListener(
+              onPlatformViewCreated,
+            );
 
-          controller.create();
-          return controller;
-        },
-      );
-    } else {
-      return AndroidView(
-        viewType: viewType,
+            controller.create();
+            return controller;
+          },
+        );
+      } else {
+        return AndroidView(
+          viewType: 'plugins.flutter.io/google_maps',
+          onPlatformViewCreated: onPlatformViewCreated,
+          gestureRecognizers: widgetConfiguration.gestureRecognizers,
+          creationParams: creationParams,
+          creationParamsCodec: const StandardMessageCodec(),
+        );
+      }
+    } else if (defaultTargetPlatform == TargetPlatform.iOS) {
+      return UiKitView(
+        viewType: 'plugins.flutter.io/google_maps',
         onPlatformViewCreated: onPlatformViewCreated,
         gestureRecognizers: widgetConfiguration.gestureRecognizers,
-        layoutDirection: widgetConfiguration.textDirection,
         creationParams: creationParams,
         creationParamsCodec: const StandardMessageCodec(),
       );
     }
+
+    return Text(
+        '$defaultTargetPlatform is not yet supported by the maps plugin');
   }
 
   @override
@@ -631,7 +583,7 @@ class GoogleMapsFlutterAndroid extends GoogleMapsFlutterPlatform {
       onPlatformViewCreated,
       widgetConfiguration: widgetConfiguration,
       mapObjects: mapObjects,
-      mapOptions: _jsonForMapConfiguration(mapConfiguration),
+      mapOptions: jsonForMapConfiguration(mapConfiguration),
     );
   }
 
@@ -692,88 +644,4 @@ class GoogleMapsFlutterAndroid extends GoogleMapsFlutterPlatform {
       mapOptions: mapOptions,
     );
   }
-
-  @override
-  @visibleForTesting
-  void enableDebugInspection() {
-    GoogleMapsInspectorPlatform.instance =
-        GoogleMapsInspectorAndroid((int mapId) => _channel(mapId));
-  }
-}
-
-Map<String, Object> _jsonForMapConfiguration(MapConfiguration config) {
-  final EdgeInsets? padding = config.padding;
-  return <String, Object>{
-    if (config.compassEnabled != null) 'compassEnabled': config.compassEnabled!,
-    if (config.mapToolbarEnabled != null)
-      'mapToolbarEnabled': config.mapToolbarEnabled!,
-    if (config.cameraTargetBounds != null)
-      'cameraTargetBounds': config.cameraTargetBounds!.toJson(),
-    if (config.mapType != null) 'mapType': config.mapType!.index,
-    if (config.minMaxZoomPreference != null)
-      'minMaxZoomPreference': config.minMaxZoomPreference!.toJson(),
-    if (config.rotateGesturesEnabled != null)
-      'rotateGesturesEnabled': config.rotateGesturesEnabled!,
-    if (config.scrollGesturesEnabled != null)
-      'scrollGesturesEnabled': config.scrollGesturesEnabled!,
-    if (config.tiltGesturesEnabled != null)
-      'tiltGesturesEnabled': config.tiltGesturesEnabled!,
-    if (config.zoomControlsEnabled != null)
-      'zoomControlsEnabled': config.zoomControlsEnabled!,
-    if (config.zoomGesturesEnabled != null)
-      'zoomGesturesEnabled': config.zoomGesturesEnabled!,
-    if (config.liteModeEnabled != null)
-      'liteModeEnabled': config.liteModeEnabled!,
-    if (config.trackCameraPosition != null)
-      'trackCameraPosition': config.trackCameraPosition!,
-    if (config.myLocationEnabled != null)
-      'myLocationEnabled': config.myLocationEnabled!,
-    if (config.myLocationButtonEnabled != null)
-      'myLocationButtonEnabled': config.myLocationButtonEnabled!,
-    if (padding != null)
-      'padding': <double>[
-        padding.top,
-        padding.left,
-        padding.bottom,
-        padding.right,
-      ],
-    if (config.indoorViewEnabled != null)
-      'indoorEnabled': config.indoorViewEnabled!,
-    if (config.trafficEnabled != null) 'trafficEnabled': config.trafficEnabled!,
-    if (config.buildingsEnabled != null)
-      'buildingsEnabled': config.buildingsEnabled!,
-    if (config.cloudMapId != null) 'cloudMapId': config.cloudMapId!,
-  };
-}
-
-/// Update specification for a set of [TileOverlay]s.
-// TODO(stuartmorgan): Fix the missing export of this class in the platform
-// interface, and remove this copy.
-class _TileOverlayUpdates extends MapsObjectUpdates<TileOverlay> {
-  /// Computes [TileOverlayUpdates] given previous and current [TileOverlay]s.
-  _TileOverlayUpdates.from(super.previous, super.current)
-      : super.from(objectName: 'tileOverlay');
-
-  /// Set of TileOverlays to be added in this update.
-  Set<TileOverlay> get tileOverlaysToAdd => objectsToAdd;
-
-  /// Set of TileOverlayIds to be removed in this update.
-  Set<TileOverlayId> get tileOverlayIdsToRemove =>
-      objectIdsToRemove.cast<TileOverlayId>();
-
-  /// Set of TileOverlays to be changed in this update.
-  Set<TileOverlay> get tileOverlaysToChange => objectsToChange;
-}
-
-/// Thrown to indicate that a platform interaction failed to initialize renderer.
-class AndroidMapRendererException implements Exception {
-  /// Creates a [AndroidMapRendererException] with an optional human-readable
-  /// error message.
-  AndroidMapRendererException([this.message]);
-
-  /// A human-readable error message, possibly null.
-  final String? message;
-
-  @override
-  String toString() => 'AndroidMapRendererException($message)';
 }

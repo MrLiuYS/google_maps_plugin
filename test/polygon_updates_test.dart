@@ -4,11 +4,10 @@
 
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:google_maps_flutter/lib_platform_interface/google_maps_flutter_platform_interface.dart';
-// import 'package:google_maps_flutter_platform_interface/google_maps_flutter_platform_interface.dart';
+import 'package:google_maps_plugin/google_maps_plugin.dart';
+import 'package:google_maps_plugin/lib_platform_interface/google_maps_plugin_platform_interface.dart';
 
-import 'fake_google_maps_flutter_platform.dart';
+import 'fake_google_maps_plugin_platform.dart';
 
 Widget _mapWithPolygons(Set<Polygon> polygons) {
   return Directionality(

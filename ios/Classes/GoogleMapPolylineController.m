@@ -45,29 +45,14 @@
   for (CLLocation *location in points) {
     [path addCoordinate:location.coordinate];
   }
-    
-    GMSStrokeStyle *redWithStamp = [GMSStrokeStyle solidColor:[UIColor clearColor]];
-    UIImage *image = [UIImage imageNamed:@"custtexture_bad"];
-    redWithStamp.stampStyle = [GMSTextureStyle textureStyleWithImage:image];
-
-    GMSStyleSpan *span = [GMSStyleSpan spanWithStyle:redWithStamp segments:2];
-    self.polyline.spans = @[span];
-    
-//    UIImage *image = [UIImage imageNamed:@"custtexture_bad"];
-//    GMSStrokeStyle *transparentStampStroke = [GMSStrokeStyle transparentStrokeWithStampStyle:[GMSSpriteStyle spriteStyleWithImage:image]];
-//
-//    GMSStyleSpan *span = [GMSStyleSpan spanWithStyle:transparentStampStroke];
-//    self.polyline.spans = @[span];
-    
-    
   self.polyline.path = path;
 }
 
 - (void)setColor:(UIColor *)color {
-//  self.polyline.strokeColor = color;
+  self.polyline.strokeColor = color;
 }
 - (void)setStrokeWidth:(CGFloat)width {
-  self.polyline.strokeWidth = 30;
+  self.polyline.strokeWidth = width;
 }
 
 - (void)setGeodesic:(BOOL)isGeodesic {

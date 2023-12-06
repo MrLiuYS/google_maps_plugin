@@ -1,14 +1,5 @@
-// Copyright 2013 The Flutter Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
+part of google_maps_plugin;
 
-import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart';
-
-import '../../lib_platform_interface/google_maps_flutter_platform_interface.dart';
-// import 'package:google_maps_flutter_platform_interface/google_maps_flutter_platform_interface.dart';
-
-/// An Android of implementation of [GoogleMapsInspectorPlatform].
 @visibleForTesting
 class GoogleMapsInspectorAndroid extends GoogleMapsInspectorPlatform {
   /// Creates a method-channel-based inspector instance that gets the channel

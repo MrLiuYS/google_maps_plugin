@@ -1,11 +1,3 @@
-
-# Reference
-
-* [google_maps_flutter](https://pub.dev/packages/google_maps_flutter)
-* [google_maps_flutter_ios](https://pub.dev/packages/google_maps_flutter_ios)
-* [google_maps_flutter_android](https://pub.dev/packages/google_maps_flutter_android)
-
-
 # Google Maps for Flutter
 
 <?code-excerpt path-base="example/lib"?>

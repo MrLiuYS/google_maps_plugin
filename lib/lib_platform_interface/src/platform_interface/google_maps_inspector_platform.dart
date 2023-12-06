@@ -4,10 +4,10 @@
 
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
-import '../../google_maps_flutter_platform_interface.dart';
+import '../../google_maps_plugin_platform_interface.dart';
 
 /// The interface that platform-specific implementations of
-/// `google_maps_flutter` can extend to support state inpsection in tests.
+/// `google_maps_plugin` can extend to support state inpsection in tests.
 ///
 /// Avoid `implements` of this interface. Using `implements` makes adding any
 /// new methods here a breaking change for end users of your platform!

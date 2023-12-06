@@ -1,5 +1,5 @@
-framework module google_maps_flutter_ios {
-  umbrella header "google_maps_flutter_ios-umbrella.h"
+framework module google_maps_plugin {
+  umbrella header "google_maps_plugin-umbrella.h"
 
   export *
   module * { export * }

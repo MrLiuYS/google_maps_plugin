@@ -1,8 +1,4 @@
-// Copyright 2013 The Flutter Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
-
-part of google_maps_flutter;
+part of google_maps_plugin;
 
 /// Callback method for when the map is ready to be used.
 ///
@@ -41,10 +37,10 @@ class UnknownMapObjectIdError extends Error {
 
 /// Android specific settings for [GoogleMap].
 @Deprecated(
-    'See https://pub.dev/packages/google_maps_flutter_android#display-mode')
+    'See https://pub.dev/packages/google_maps_plugin_android#display-mode')
 class AndroidGoogleMapsFlutter {
   @Deprecated(
-      'See https://pub.dev/packages/google_maps_flutter_android#display-mode')
+      'See https://pub.dev/packages/google_maps_plugin_android#display-mode')
   AndroidGoogleMapsFlutter._();
 
   /// Whether to render [GoogleMap] with a [AndroidViewSurface] to build the Google Maps widget.
@@ -55,7 +51,7 @@ class AndroidGoogleMapsFlutter {
   /// https://flutter.dev/docs/development/platform-integration/platform-views#performance for more
   /// information.
   @Deprecated(
-      'See https://pub.dev/packages/google_maps_flutter_android#display-mode')
+      'See https://pub.dev/packages/google_maps_plugin_android#display-mode')
   static bool get useAndroidViewSurface {
     final GoogleMapsFlutterPlatform platform =
         GoogleMapsFlutterPlatform.instance;
@@ -73,7 +69,7 @@ class AndroidGoogleMapsFlutter {
   /// https://flutter.dev/docs/development/platform-integration/platform-views#performance for more
   /// information.
   @Deprecated(
-      'See https://pub.dev/packages/google_maps_flutter_android#display-mode')
+      'See https://pub.dev/packages/google_maps_plugin_android#display-mode')
   static set useAndroidViewSurface(bool useAndroidViewSurface) {
     final GoogleMapsFlutterPlatform platform =
         GoogleMapsFlutterPlatform.instance;

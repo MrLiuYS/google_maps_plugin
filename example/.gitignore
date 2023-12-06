@@ -42,3 +42,13 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+/android/.gradle
+local.properties
+
+.fvm/flutter_sdk
+pubspec.lock
+ios/Podfile.lock
+
+/ios/.symlinks
+/ios/Pods
+/ios/Podfile.lock
