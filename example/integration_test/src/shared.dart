@@ -7,7 +7,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:google_maps_plugin/google_maps_plugin.dart';
 
 /// Initial map center
 const LatLng kInitialMapCenter = LatLng(0, 0);

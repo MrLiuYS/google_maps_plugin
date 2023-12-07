@@ -11,10 +11,10 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
-import '../../google_maps_flutter_platform_interface.dart';
+import '../../google_maps_plugin_platform_interface.dart';
 import '../types/utils/map_configuration_serialization.dart';
 
-/// The interface that platform-specific implementations of `google_maps_flutter` must extend.
+/// The interface that platform-specific implementations of `google_maps_plugin` must extend.
 ///
 /// Avoid `implements` of this interface. Using `implements` makes adding any new
 /// methods here a breaking change for end users of your platform!

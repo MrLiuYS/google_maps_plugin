@@ -6,8 +6,7 @@ import 'dart:async';
 
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
-import 'package:google_maps_flutter/lib_platform_interface/google_maps_flutter_platform_interface.dart';
-// import 'package:google_maps_flutter_platform_interface/google_maps_flutter_platform_interface.dart';
+import 'package:google_maps_plugin/lib_platform_interface/google_maps_plugin_platform_interface.dart';
 import 'package:stream_transform/stream_transform.dart';
 
 // A dummy implementation of the platform interface for tests.

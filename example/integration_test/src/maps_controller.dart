@@ -7,7 +7,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:google_maps_plugin/google_maps_plugin.dart';
 import 'package:integration_test/integration_test.dart';
 
 import 'shared.dart';
@@ -69,7 +69,7 @@ void runTests() {
   },
       // Android doesn't like the layout required for the web, so we skip web in this test.
       // The equivalent web test already exists here:
-      // https://github.com/flutter/packages/blob/c43cc13498a1a1c4f3d1b8af2add9ce7c15bd6d0/packages/google_maps_flutter/google_maps_flutter_web/example/integration_test/projection_test.dart#L78
+      // https://github.com/flutter/packages/blob/c43cc13498a1a1c4f3d1b8af2add9ce7c15bd6d0/packages/google_maps_plugin/google_maps_plugin_web/example/integration_test/projection_test.dart#L78
       skip: isWeb);
 
   testWidgets('testGetVisibleRegion', (WidgetTester tester) async {

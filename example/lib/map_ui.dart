@@ -6,7 +6,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:google_maps_plugin/google_maps_plugin.dart';
 
 import 'page.dart';
 
